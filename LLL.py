@@ -2,38 +2,37 @@ import numpy as np
 
 # Basis vectors will be in rows, not columns.
 # Input will come from command line: b1, b2, so on. 
-# B = np.matrix([[b1],
-#               [b2], 
-#               [b3]])
+# B = np.array([[--b1--],
+#               [--b2--], 
+#               [--b3--]]) 
 
-B = np.array([[3, 1], 
-                [2, 2]])
+# dummy data
+basis = np.array([[3, 1], 
+                [2, 2],
+                [5, 4],
+                [7, 1]]).astype(float)
+
+orthobasis = basis.copy()
+
+def projection_scale(u, v):
+    return np.dot(u, v) / np.dot(u, u)
 
 def proj(u, v):
-    '''Computes the projection of vector v onto vector u.'''
-    print 'u is ', u 
-    print 'v is ', v
-    mu = np.dot(u, v) / np.dot(u, u)
-    print 'mu is ', mu
-    return np.dot(mu, u)
+    '''Computes the projection of vector v onto vector u. Assumes u is not zero.'''
+    return np.dot(projection_scale(u, v), u)
 
-def gram_schmidt(B): 
-    '''Computes Gram Schmidt orthoganalization without normalization of a set of basis vectors.'''
-    B = 1.0 * B
-    O = B.copy()
-    for i in range(0, B.shape[1]):
+def gram_schmidt(basis): 
+    '''Computes Gram Schmidt orthoganalization (without normalization) of a set of basis vectors.'''
+    for i in range(0, basis.shape[1]):
         for j in range(0, i):
-            print 'O is ', O
-            O[i] -= proj(O[j], B[i])
-            print 'O[i] is ', O[i]
-    return O
+            orthobasis[i] -= proj(orthobasis[j], basis[i])
+    return orthobasis
 
-# def reduction(matrixA):
-
-
-# def lovasz(matrixA):
-
-
-# def lll_reduction(matrixA):
-
-print gram_schmidt(B)
+def reduction(basis, orthobasis):
+    '''Performs length reduction on a given set of basis vectors. Updates and re-orthogonalizes basis vectors.'''
+    for basis_index in range(2, orthobasis.shape[0]):
+        print 'pass ', basis_index
+        for projection_index in range(basis_index - 1, 0, -1):
+            m = round(projection_scale(basis[basis_index], orthobasis[projection_index]))
+            basis[basis_index] -= np.dot(m, basis[projection_index])
+            gram_schmidt(basis)
