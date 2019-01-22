@@ -31,16 +31,9 @@ def gram_schmidt(basis):
 
 def reduction(basis, orthobasis):
     '''Performs length reduction on a given set of basis vectors. Updates and re-orthogonalizes basis vectors.'''
-    print orthobasis.shape
     for basis_index in range(2, orthobasis.shape[0] + 1):
-        print 'pass ', basis_index
         for projection_index in range(basis_index - 1, 0, -1):
-            print basis[basis_index - 1], orthobasis[projection_index - 1]
-            print np.dot(basis[basis_index - 1], orthobasis[projection_index - 1])
-            print np.dot(orthobasis[projection_index - 1], orthobasis[projection_index - 1]) 
             m = round(projection_scale(orthobasis[projection_index - 1], basis[basis_index - 1])) # basis[1], orthobasis[0]
-            print 'unrounded m ', projection_scale(orthobasis[projection_index - 1], basis[basis_index - 1])
-            print 'subtracting by ', np.dot(m, basis[projection_index - 1]), basis[projection_index - 1], m
             basis[basis_index - 1] -= np.dot(m, basis[projection_index - 1])
             if basis.shape[0] > 2:
                 gram_schmidt(basis)
