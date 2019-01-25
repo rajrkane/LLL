@@ -13,7 +13,7 @@ basis = np.array([[201, 37],
 
 orthobasis = basis.copy()
 
-delta = 0.75
+DELTA = 0.75
 
 def projection_scale(u, v):
     return np.dot(u, v) / np.dot(u, u)
@@ -41,17 +41,20 @@ def reduction(basis, orthobasis):
 
 # b1, b2, b3, .... vs basis[0], basis[1], basis[2], ....
 def lovasz(basis, orthobasis):
-    for basis_index in range(1, orthobasis.shape[0]):
-        a = projection_scale(basis[basis_index + 1], orthobasis[basis_index])
+    for basis_index in range(0, orthobasis.shape[0] - 1):
+        a = projection_scale(orthobasis[basis_index], basis[basis_index + 1])
         b = np.dot(a, orthobasis[basis_index]) 
-        c = b + orthobasis[basis_index + 1]
+        c = np.add(b, orthobasis[basis_index + 1])
+        print 'c adding to b by ', orthobasis[basis_index + 1]
         d = la.norm(c)
         e = d * d
-        if e < delta * la.norm(orthobasis[basis_index]) * la.norm(orthobasis[basis_index]):
-            temp = basis[basis_index] 
-            basis[basis_index] = orthobasis[basis_index + 1]
-            orthobasis[basis_index + 1] = temp
-            # basis[basis_index], orthobasis[basis_index + 1] = orthobasis[basis_index + 1], basis[basis_index]
+        print 'a is ', a, ' b is ', b, 'c is ', c, ' d is ', d
+        print 'e is ', e
+        print 'criterion is ', DELTA * la.norm(orthobasis[basis_index]) * la.norm(orthobasis[basis_index])
+        if e < DELTA * la.norm(orthobasis[basis_index]) * la.norm(orthobasis[basis_index]):
+            print 'swapping ', basis[basis_index], basis[basis_index + 1]
+            basis[[basis_index, basis_index + 1]] = basis[[basis_index + 1, basis_index]]
+            # basis[basis_index], basis[basis_index + 1] = basis[basis_index + 1], basis[basis_index]
             gram_schmidt(basis)
 
 
@@ -59,6 +62,8 @@ gram_schmidt(basis)
 print 'GS ', basis, orthobasis
 reduction(basis, orthobasis)
 print 'Reduction and GS ', basis, orthobasis
+lovasz(basis, orthobasis)
+print 'Lovasz and GS', basis, orthobasis
             
 
 
