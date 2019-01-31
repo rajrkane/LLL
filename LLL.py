@@ -24,9 +24,9 @@ def proj(u, v):
 
 def gram_schmidt(basis): 
     '''Computes Gram Schmidt orthoganalization (without normalization) of a set of basis vectors.'''
-    for i in range(0, basis.shape[1]):
-        for j in range(0, i):
-            orthobasis[i] -= proj(orthobasis[j], basis[i])
+    orthobasis[0] = basis[0]
+    for i in range(1, basis.shape[1]):
+        orthobasis[i] = basis[i] - proj(orthobasis[i - 1], basis[i])
     return orthobasis
 
 def reduction(basis, orthobasis):
@@ -39,23 +39,18 @@ def reduction(basis, orthobasis):
                 gram_schmidt(basis)
 
 
-# b1, b2, b3, .... vs basis[0], basis[1], basis[2], ....
 def lovasz(basis, orthobasis):
     for basis_index in range(0, orthobasis.shape[0] - 1):
         a = projection_scale(orthobasis[basis_index], basis[basis_index + 1])
         b = np.dot(a, orthobasis[basis_index]) 
         c = np.add(b, orthobasis[basis_index + 1])
-        print 'c adding to b by ', orthobasis[basis_index + 1]
         d = la.norm(c)
         e = d * d
-        print 'a is ', a, ' b is ', b, 'c is ', c, ' d is ', d
-        print 'e is ', e
-        print 'criterion is ', DELTA * la.norm(orthobasis[basis_index]) * la.norm(orthobasis[basis_index])
         if e < DELTA * la.norm(orthobasis[basis_index]) * la.norm(orthobasis[basis_index]):
             print 'swapping ', basis[basis_index], basis[basis_index + 1]
             basis[[basis_index, basis_index + 1]] = basis[[basis_index + 1, basis_index]]
-            # basis[basis_index], basis[basis_index + 1] = basis[basis_index + 1], basis[basis_index]
-            gram_schmidt(basis)
+            print 'applying gram schmidt to ', basis
+            # gram_schmidt(basis)
 
 
 gram_schmidt(basis)
@@ -63,6 +58,7 @@ print 'GS ', basis, orthobasis
 reduction(basis, orthobasis)
 print 'Reduction and GS ', basis, orthobasis
 lovasz(basis, orthobasis)
+gram_schmidt(basis)
 print 'Lovasz and GS', basis, orthobasis
             
 
