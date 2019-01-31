@@ -41,16 +41,10 @@ def reduction(basis, orthobasis):
 
 def lovasz(basis, orthobasis):
     for basis_index in range(0, orthobasis.shape[0] - 1):
-        a = projection_scale(orthobasis[basis_index], basis[basis_index + 1])
-        b = np.dot(a, orthobasis[basis_index]) 
-        c = np.add(b, orthobasis[basis_index + 1])
-        d = la.norm(c)
-        e = d * d
-        if e < DELTA * la.norm(orthobasis[basis_index]) * la.norm(orthobasis[basis_index]):
-            print 'swapping ', basis[basis_index], basis[basis_index + 1]
+        mark = la.norm(np.add(np.dot(projection_scale(orthobasis[basis_index], basis[basis_index + 1]), orthobasis[basis_index]), orthobasis[basis_index + 1]))
+        if mark * mark < DELTA * la.norm(orthobasis[basis_index]) * la.norm(orthobasis[basis_index]):
             basis[[basis_index, basis_index + 1]] = basis[[basis_index + 1, basis_index]]
-            print 'applying gram schmidt to ', basis
-            # gram_schmidt(basis)
+            gram_schmidt(basis)
 
 
 gram_schmidt(basis)
@@ -58,7 +52,6 @@ print 'GS ', basis, orthobasis
 reduction(basis, orthobasis)
 print 'Reduction and GS ', basis, orthobasis
 lovasz(basis, orthobasis)
-gram_schmidt(basis)
 print 'Lovasz and GS', basis, orthobasis
             
 
