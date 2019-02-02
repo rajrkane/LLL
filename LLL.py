@@ -1,3 +1,5 @@
+import sys
+import json
 import numpy as np
 from numpy import linalg as la
 
@@ -7,9 +9,10 @@ from numpy import linalg as la
 #               [--b3--]]) 
 
 # dummy data
-basis = np.array([[201, 37], 
-                [1648, 297]]).astype(float)
+# basis = np.array([[201, 37], 
+#                 [1648, 297]]).astype(float)
 
+basis = np.array(json.loads(sys.argv[1])).astype(float)
 orthobasis = basis.copy()
 
 DELTA = 0.75
