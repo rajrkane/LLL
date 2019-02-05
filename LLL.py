@@ -3,27 +3,25 @@ import json
 import numpy as np
 from numpy import linalg as la
 
-# Basis vectors arranged in rows of basis, not columns.
-# basis = np.array([[--b1--],
-#               [--b2--], 
-#               [--b3--]]) 
+# Dummy data for testing
+# basis = np.array([[201, 37], 
+#                 [1648, 297]]).astype(float)
 
-# dummy data
-basis = np.array([[201, 37], 
-                [1648, 297]]).astype(float)
-
-# basis = np.array(json.loads(sys.argv[1])).astype(float)
+basis = np.array(json.loads(sys.argv[1])).astype(float)
 orthobasis = basis.copy()
 
 working_index = 1 # at least 2 basis vectors
-
 DELTA = 0.75
-
-step_way = False
+ordered = False
 
 def increment_working_index():
+    '''Continue to the next basis vector. Called when all previous vectors have been reduced and ordered.'''
     if working_index < orthobasis.shape[0]:
-     working_index += 1
+        global working_index 
+        working_index += 1
+    else: 
+        global ordered
+        ordered = True
 
 def projection_scale(u, v):
     return np.dot(u, v) / np.dot(u, u)
@@ -41,21 +39,11 @@ def gram_schmidt(basis):
 
 def reduction(basis, orthobasis):
     '''Performs length reduction on a given set of basis vectors. Updates and re-orthogonalizes the basis.'''
-    if step_way:
-        for basis_index in range(1, orthobasis.shape[0] + 1):
-            for projection_index in range(basis_index - 1, 0, -1):
-                m = round(projection_scale(orthobasis[projection_index - 1], basis[basis_index - 1]))
-                print 'reducing by ', np.dot(m, basis[projection_index - 1])
-                basis[basis_index - 1] -= np.dot(m, basis[projection_index - 1])
-                if basis.shape[0] > 2:
-                    gram_schmidt(basis)
-    else:
-        for projection_index in range(working_index - 1, -1, -1):
-            m = round(projection_scale(orthobasis[projection_index ], basis[working_index ]))
-            print 'reducing by ', np.dot(m, basis[projection_index ])
-            basis[working_index] -= np.dot(m, basis[projection_index ])
-            if basis.shape[0] > 2:
-                gram_schmidt(basis)
+    for projection_index in range(working_index - 1, -1, -1):
+        m = round(projection_scale(orthobasis[projection_index ], basis[working_index ]))
+        basis[working_index] -= np.dot(m, basis[projection_index ])
+        if basis.shape[0] > 2:
+            gram_schmidt(basis)
 
 def lovasz(basis, orthobasis):
     '''Checks Lovasz condition on a given set of basis vectors. If condition is met, swaps adjacent basis vectors and re-orthogonalizes the basis.'''
@@ -64,35 +52,21 @@ def lovasz(basis, orthobasis):
         if mark * mark < DELTA * la.norm(orthobasis[basis_index]) * la.norm(orthobasis[basis_index]):
             basis[[basis_index, basis_index + 1]] = basis[[basis_index + 1, basis_index]]
             gram_schmidt(basis)
+        else:
+            increment_working_index()
 
-# testing
-gram_schmidt(basis)
-print 'GS ', basis, orthobasis
-raw_input("")
-reduction(basis, orthobasis)
-print 'Reduction and GS ', basis, orthobasis
-# raw_input("")
-# lovasz(basis, orthobasis)
-# print 'Lovasz and GS', basis, orthobasis
-# raw_input("")
-# reduction(basis, orthobasis)
-# print 'Reduction and GS ', basis, orthobasis 
-# raw_input("")
-# lovasz(basis, orthobasis)
-# print 'Lovasz and GS ', basis, orthobasis
-# raw_input("")
-# reduction(basis, orthobasis)
-# print 'Reduction and GS ', basis, orthobasis
-# raw_input("")
-# lovasz(basis, orthobasis)
-# print 'Lovasz and GS ', basis, orthobasis
+def main():
+    gram_schmidt(basis)
+    print 'Gram Schmidt. Basis: ', basis, " , Orthobasis: ", orthobasis
+    raw_input("")
+    while ordered == False:
+        reduction(basis, orthobasis)
+        print 'Reduction and Gram Schmidt. Basis: ', basis, " , Orthobasis: ", orthobasis
+        raw_input("")
+        lovasz(basis, orthobasis)
+        print 'Lovasz and Gram Schmidt. Basis: ', basis, " , Orthobasis: ", orthobasis
+        raw_input("")
+    print 'LLL Reduced Basis: ', basis
 
-# def if __name__ == "__main__":
-#     ordered = false
-#     gram_schmidt(basis)
-#     raw_input("")
-#     while ! ordered:
-#         reduction(basis, orthobasis)
-#         raw_input("")
-#         lovasz(basis, orthobasis)
-#         raw_input("")
+if __name__ == "__main__":
+    main()
