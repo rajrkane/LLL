@@ -4,21 +4,25 @@ import numpy as np
 from numpy import linalg as la
 
 # Dummy data for testing
-# basis = np.array([[201, 37], 
-#                 [1648, 297]]).astype(float)
+basis = np.array([[201, 37], 
+                [1648, 297]]).astype(float)
 
-basis = np.array(json.loads(sys.argv[1])).astype(float)
+# basis = np.array(json.loads(sys.argv[1])).astype(float)
 orthobasis = basis.copy()
 
 working_index = 1 # at least 2 basis vectors
 DELTA = 0.75
 ordered = False
 
+# Need functions for determining whether data is fed correctly. (Dimensions, linear independence, syntax) 
+# Issue: error if fewer basis vectors than the dimension of the lattice.
+
 def increment_working_index():
     '''Continue to the next basis vector. Called when all previous vectors have been reduced and ordered.'''
     if working_index < orthobasis.shape[0]:
         global working_index 
         working_index += 1
+        print 'working index is ', working_index
     else: 
         global ordered
         ordered = True
@@ -33,8 +37,12 @@ def proj(u, v):
 def gram_schmidt(basis): 
     '''Computes Gram Schmidt orthoganalization (without normalization) of a set of basis vectors.'''
     orthobasis[0] = basis[0]
+    # loop through dimension of basis
     for i in range(1, basis.shape[1]):
-        orthobasis[i] = basis[i] - proj(orthobasis[i - 1], basis[i])
+        # need to subtract every previous vector from current vector being orthogonalized
+        orthobasis[i] = basis[i]
+        for j in range(0, i):
+            orthobasis[i] -= proj(orthobasis[j], basis[i])
     return orthobasis
 
 def reduction(basis, orthobasis):
