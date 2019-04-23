@@ -7,27 +7,17 @@ from numpy import linalg as la
 basis = np.array([[201, 37], 
                 [1648, 297]]).astype(float)
 
-# basis = np.array(json.loads(sys.argv[1])).astype(float)
-orthobasis = basis.copy()
+# basis = np.array(json.loads(sys.argv[1])).astype(float) # Initialize the basis as the user input.
+orthobasis = basis.copy()   # Initialize the Gram-Scmidt basis.
 
-working_index = 1 # at least 2 basis vectors
-DELTA = 0.75
-ordered = False
+k = 1 # Initialize the working index.
+DELTA = 0.75   
 
 # Need functions for determining whether data is fed correctly. (Dimensions, linear independence, syntax) 
-# Issue: error if fewer basis vectors than the dimension of the lattice.
 
-def increment_working_index():
-    '''Continue to the next basis vector. Called when all previous vectors have been reduced and ordered.'''
-    if working_index < orthobasis.shape[0]:
-        global working_index 
-        working_index += 1
-        print 'working index is ', working_index
-    else: 
-        global ordered
-        ordered = True
 
 def projection_scale(u, v):
+    '''Computes <u,v>/<u,u>, which is the scale used in projection.'''
     return np.dot(u, v) / np.dot(u, u)
 
 def proj(u, v):
@@ -35,44 +25,45 @@ def proj(u, v):
     return np.dot(projection_scale(u, v), u)
 
 def gram_schmidt(basis): 
-    '''Computes Gram Schmidt orthoganalization (without normalization) of a set of basis vectors.'''
+    '''Computes Gram Schmidt orthoganalization (without normalization) of a basis.'''
     orthobasis[0] = basis[0]
-    # loop through dimension of basis
-    for i in range(1, basis.shape[1]):
-        # need to subtract every previous vector from current vector being orthogonalized
-        orthobasis[i] = basis[i]
+    for i in range(1, basis.shape[1]):  # Loop through dimension of basis.
+        orthobasis[i] = basis[i]    # Initialize the current vector being orthogonalized to the corresponding basis vector.
         for j in range(0, i):
             orthobasis[i] -= proj(orthobasis[j], basis[i])
     return orthobasis
 
 def reduction(basis, orthobasis):
-    '''Performs length reduction on a given set of basis vectors. Updates and re-orthogonalizes the basis.'''
-    for projection_index in range(working_index - 1, -1, -1):
-        m = round(projection_scale(orthobasis[projection_index ], basis[working_index ]))
-        basis[working_index] -= np.dot(m, basis[projection_index ])
-        if basis.shape[0] > 2:
-            gram_schmidt(basis)
+    '''Performs length reduction on a basis.'''
+    total_reduction = 0 # Track the total amount by which the working vector is reduced.
+    for j in range(k-1, -1, -1):   # j loop. Loop down from k-1 to 0.
+        m = round(projection_scale(orthobasis[j], basis[k]))
+        total_reduction += np.dot(m, basis[j])[0]
+        basis[k] -= np.dot(m, basis[j]) # Reduce the working vector by multiples of preceding vectors.
+    if total_reduction > 0:
+        gram_schmidt(basis) # Recompute Gram-Scmidt if the working vector has been reduced. 
 
 def lovasz(basis, orthobasis):
-    '''Checks Lovasz condition on a given set of basis vectors. If condition is met, swaps adjacent basis vectors and re-orthogonalizes the basis.'''
-    for basis_index in range(0, orthobasis.shape[0] - 1):
-        mark = la.norm(np.add(np.dot(projection_scale(orthobasis[basis_index], basis[basis_index + 1]), orthobasis[basis_index]), orthobasis[basis_index + 1]))
-        if mark * mark < DELTA * la.norm(orthobasis[basis_index]) * la.norm(orthobasis[basis_index]):
-            basis[[basis_index, basis_index + 1]] = basis[[basis_index + 1, basis_index]]
-            gram_schmidt(basis)
-        else:
-            increment_working_index()
+    global k
+    '''Checks the Lovasz condition for a basis. Either swaps adjacent basis vectors and recomputes Gram-Scmidt or increments the working index.'''
+    c = DELTA - projection_scale(orthobasis[k-1], basis[k])**2
+    if la.norm(orthobasis[k])**2 >= np.dot(c, la.norm(orthobasis[k-1]**2)): # Check the Lovasz condition.
+        k += 1  # Increment k if the condition is met.
+    else: 
+        basis[[k, k-1]] = basis[[k-1, k]] # If the condition is not met, swap the working vector and the immediately preceding basis vector.
+        gram_schmidt(basis) # Recompute Gram-Schmidt if swap
+        k = max([k-1, 1])
 
 def main():
     gram_schmidt(basis)
-    print 'Gram Schmidt. Basis: ', basis, " , Orthobasis: ", orthobasis
+    print 'Performed Gram Schmidt. Basis: ', basis, " , Orthobasis: ", orthobasis
     raw_input("")
-    while ordered == False:
+    while k <= basis.shape[1] - 1:
         reduction(basis, orthobasis)
-        print 'Reduction and Gram Schmidt. Basis: ', basis, " , Orthobasis: ", orthobasis
+        print 'Performed Reduction. Basis: ', basis, " , Orthobasis: ", orthobasis
         raw_input("")
         lovasz(basis, orthobasis)
-        print 'Lovasz and Gram Schmidt. Basis: ', basis, " , Orthobasis: ", orthobasis
+        print 'Checked Lovasz Condition. Basis: ', basis, " , Orthobasis: ", orthobasis
         raw_input("")
     print 'LLL Reduced Basis: ', basis
 
