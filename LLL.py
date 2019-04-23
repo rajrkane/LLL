@@ -1,19 +1,34 @@
+"""LLL.py: Implements the LLL Algorithm originally developed by Lenstra, Lenstra, Lovasz in 1982. Python 2.7."""
+
 import sys
 import json
 import numpy as np
 from numpy import linalg as la
 
-# Dummy data for testing
-basis = np.array([[201, 37], 
-                [1648, 297]]).astype(float)
+__author__ = "Raj Kane"
+__version__ = "Spring 2019"
 
-# basis = np.array(json.loads(sys.argv[1])).astype(float) # Initialize the basis as the user input.
-orthobasis = basis.copy()   # Initialize the Gram-Scmidt basis.
+basis = np.array(json.loads(sys.argv[1])).astype(float) # Initialize the basis as the user input.
+orthobasis = basis.copy()   # Initialize the Gram-Schmidt basis.
 
 k = 1 # Initialize the working index.
 DELTA = 0.75   
+INDEPENDENT = True
 
-# Need functions for determining whether data is fed correctly. (Dimensions, linear independence, syntax) 
+# Still to do:
+#   Test function (syntax, dimensions, linear independence/redundancy)
+#   Upon starting, display directions for user
+#   Nice display of basis after each step
+
+def math_tests():
+    '''Checks whether the input dimension and linear independence.'''
+    global INDEPENDENT
+    for i in range(basis.shape[1]): # First check linear independence with Cauchy Schwarz inequality.
+        for j in range(basis.shape[1]):
+            if i != j:
+                if np.abs(np.inner(basis[i],basis[j]) - np.linalg.norm(basis[j]) * np.linalg.norm(basis[i])) < 1E-5:
+                    INDEPENDENT = False
+
 
 
 def projection_scale(u, v):
@@ -24,7 +39,7 @@ def proj(u, v):
     '''Computes the projection of vector v onto vector u. Assumes u is not zero.'''
     return np.dot(projection_scale(u, v), u)
 
-def gram_schmidt(basis): 
+def gram_schmidt(): 
     '''Computes Gram Schmidt orthoganalization (without normalization) of a basis.'''
     orthobasis[0] = basis[0]
     for i in range(1, basis.shape[1]):  # Loop through dimension of basis.
@@ -33,7 +48,7 @@ def gram_schmidt(basis):
             orthobasis[i] -= proj(orthobasis[j], basis[i])
     return orthobasis
 
-def reduction(basis, orthobasis):
+def reduction():
     '''Performs length reduction on a basis.'''
     total_reduction = 0 # Track the total amount by which the working vector is reduced.
     for j in range(k-1, -1, -1):   # j loop. Loop down from k-1 to 0.
@@ -41,9 +56,9 @@ def reduction(basis, orthobasis):
         total_reduction += np.dot(m, basis[j])[0]
         basis[k] -= np.dot(m, basis[j]) # Reduce the working vector by multiples of preceding vectors.
     if total_reduction > 0:
-        gram_schmidt(basis) # Recompute Gram-Scmidt if the working vector has been reduced. 
+        gram_schmidt() # Recompute Gram-Scmidt if the working vector has been reduced. 
 
-def lovasz(basis, orthobasis):
+def lovasz():
     global k
     '''Checks the Lovasz condition for a basis. Either swaps adjacent basis vectors and recomputes Gram-Scmidt or increments the working index.'''
     c = DELTA - projection_scale(orthobasis[k-1], basis[k])**2
@@ -51,21 +66,36 @@ def lovasz(basis, orthobasis):
         k += 1  # Increment k if the condition is met.
     else: 
         basis[[k, k-1]] = basis[[k-1, k]] # If the condition is not met, swap the working vector and the immediately preceding basis vector.
-        gram_schmidt(basis) # Recompute Gram-Schmidt if swap
+        gram_schmidt() # Recompute Gram-Schmidt if swap
         k = max([k-1, 1])
 
 def main():
-    gram_schmidt(basis)
-    print 'Performed Gram Schmidt. Basis: ', basis, " , Orthobasis: ", orthobasis
-    raw_input("")
-    while k <= basis.shape[1] - 1:
-        reduction(basis, orthobasis)
-        print 'Performed Reduction. Basis: ', basis, " , Orthobasis: ", orthobasis
-        raw_input("")
-        lovasz(basis, orthobasis)
-        print 'Checked Lovasz Condition. Basis: ', basis, " , Orthobasis: ", orthobasis
-        raw_input("")
-    print 'LLL Reduced Basis: ', basis
+    math_tests()
+    if INDEPENDENT:
+        while True:
+            x = raw_input("Would you like to see the steps? Press [Y/N] and Enter. ")
+            if x in ['Y','N', 'y', 'n']: break
+            else: raw_input("Would you like to see the steps? Press [Y/N] and Enter. ")
+        if x in ['Y', 'y']:
+            gram_schmidt()
+            print 'Performed Gram Schmidt.\nBasis:\n', basis, " ,\nOrthobasis:\n", orthobasis
+            raw_input("")
+            while k <= basis.shape[1] - 1:
+                reduction()
+                print 'Performed Reduction.\nBasis:\n', basis, " ,\nOrthobasis:\n", orthobasis
+                raw_input("")
+                lovasz()
+                print 'Checked Lovasz Condition.\nBasis:\n', basis, " ,\nOrthobasis:\n", orthobasis
+                raw_input("")
+            print 'LLL Reduced Basis:\n', basis
+        else: 
+            gram_schmidt(basis)
+            while k<= basis.shape[1] - 1:
+                reduction()
+                lovasz()
+            print 'LLL Reduced Basis:\n', basis
+    else: 
+        print 'ERROR: The input must be linearly independent.'
 
 if __name__ == "__main__":
     main()
