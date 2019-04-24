@@ -7,3 +7,5 @@ A recent version of Python and NumPy.
 
 <h2>To use</h2>
 ```python LLL.py **basis**```
+An n-dimensional basis with the i-th basis vector formatted as ```[basis[i][0],basis[i][1],...,basis[i][i-1]``` should be input as the following string: 
+```'[basis[0],basis[1],...,basis[n-1]]'```.
