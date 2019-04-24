@@ -13,23 +13,18 @@ orthobasis = basis.copy()   # Initialize the Gram-Schmidt basis.
 
 k = 1 # Initialize the working index.
 DELTA = 0.75   
-INDEPENDENT = True
 
-# Still to do:
-#   Test function (syntax, dimensions, linear independence/redundancy)
-#   Upon starting, display directions for user
-#   Nice display of basis after each step
-
-def math_tests():
-    '''Checks whether the input dimension and linear independence.'''
-    global INDEPENDENT
+def basis_valid():
+    '''Checks input dimension and linear independence.'''
     for i in range(basis.shape[1]): # First check linear independence with Cauchy Schwarz inequality.
         for j in range(basis.shape[1]):
             if i != j:
-                if np.abs(np.inner(basis[i],basis[j]) - np.linalg.norm(basis[j]) * np.linalg.norm(basis[i])) < 1E-5:
-                    INDEPENDENT = False
-
-
+                norm_i = np.linalg.norm(basis[i])
+                norm_j =  np.linalg.norm(basis[j])
+                inner_product = np.abs(np.inner(basis[i],basis[j]))
+                if  inner_product - norm_i * norm_j < 1E-5:
+                    return False
+    return True
 
 def projection_scale(u, v):
     '''Computes <u,v>/<u,u>, which is the scale used in projection.'''
@@ -43,7 +38,7 @@ def gram_schmidt():
     '''Computes Gram Schmidt orthoganalization (without normalization) of a basis.'''
     orthobasis[0] = basis[0]
     for i in range(1, basis.shape[1]):  # Loop through dimension of basis.
-        orthobasis[i] = basis[i]    # Initialize the current vector being orthogonalized to the corresponding basis vector.
+        orthobasis[i] = basis[i]
         for j in range(0, i):
             orthobasis[i] -= proj(orthobasis[j], basis[i])
     return orthobasis
@@ -70,22 +65,22 @@ def lovasz():
         k = max([k-1, 1])
 
 def main():
-    math_tests()
-    if INDEPENDENT:
+    if basis_valid():
         while True:
             x = raw_input("Would you like to see the steps? Press [Y/N] and Enter. ")
             if x in ['Y','N', 'y', 'n']: break
             else: raw_input("Would you like to see the steps? Press [Y/N] and Enter. ")
         if x in ['Y', 'y']:
             gram_schmidt()
-            print 'Performed Gram Schmidt.\nBasis:\n', basis, " ,\nOrthobasis:\n", orthobasis
-            raw_input("")
+            steps = 0
             while k <= basis.shape[1] - 1:
                 reduction()
-                print 'Performed Reduction.\nBasis:\n', basis, " ,\nOrthobasis:\n", orthobasis
+                steps += 1
+                print 'Step ', steps,'. After the reduction step, the basis is\n', basis
                 raw_input("")
                 lovasz()
-                print 'Checked Lovasz Condition.\nBasis:\n', basis, " ,\nOrthobasis:\n", orthobasis
+                steps +=1
+                print 'Step ', steps,'. After checking the Lovasz condition, the basis is\n', basis
                 raw_input("")
             print 'LLL Reduced Basis:\n', basis
         else: 
