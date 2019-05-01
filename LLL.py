@@ -70,7 +70,7 @@ def main():
             print 'Step ', steps,'. After checking the Lovasz condition, the basis is\n', basis
             raw_input("")
         print 'LLL Reduced Basis:\n', basis
-    else: 
+    else:
         gram_schmidt(basis)
         while k<= basis.shape[1] - 1:
             reduction()
