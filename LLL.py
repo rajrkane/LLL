@@ -14,18 +14,6 @@ orthobasis = basis.copy()   # Initialize the Gram-Schmidt basis.
 k = 1 # Initialize the working index.
 DELTA = 0.75   
 
-def basis_valid():
-    '''Checks input dimension and linear independence.'''
-    for i in range(basis.shape[1]): # First check linear independence with Cauchy Schwarz inequality.
-        for j in range(basis.shape[1]):
-            if i != j:
-                norm_i = np.linalg.norm(basis[i])
-                norm_j =  np.linalg.norm(basis[j])
-                inner_product = np.abs(np.inner(basis[i],basis[j]))
-                if  inner_product - norm_i * norm_j < 1E-5:
-                    return False
-    return True
-
 def projection_scale(u, v):
     '''Computes <u,v>/<u,u>, which is the scale used in projection.'''
     return np.dot(u, v) / np.dot(u, u)
@@ -65,32 +53,29 @@ def lovasz():
         k = max([k-1, 1])
 
 def main():
-    if basis_valid():
-        while True:
-            x = raw_input("Would you like to see the steps? Press [Y/N] and Enter. ")
-            if x in ['Y','N', 'y', 'n']: break
-            else: raw_input("Would you like to see the steps? Press [Y/N] and Enter. ")
-        if x in ['Y', 'y']:
-            gram_schmidt()
-            steps = 0
-            while k <= basis.shape[1] - 1:
-                reduction()
-                steps += 1
-                print 'Step ', steps,'. After the reduction step, the basis is\n', basis
-                raw_input("")
-                lovasz()
-                steps +=1
-                print 'Step ', steps,'. After checking the Lovasz condition, the basis is\n', basis
-                raw_input("")
-            print 'LLL Reduced Basis:\n', basis
-        else: 
-            gram_schmidt(basis)
-            while k<= basis.shape[1] - 1:
-                reduction()
-                lovasz()
-            print 'LLL Reduced Basis:\n', basis
+    while True:
+        x = raw_input("Would you like to see the steps? Press [Y/N] and Enter. ")
+        if x in ['Y','N', 'y', 'n']: break
+        else: raw_input("Would you like to see the steps? Press [Y/N] and Enter. ")
+    if x in ['Y', 'y']:
+        gram_schmidt()
+        steps = 0
+        while k <= basis.shape[1] - 1:
+            reduction()
+            steps += 1
+            print 'Step ', steps,'. After the reduction step, the basis is\n', basis
+            raw_input("")
+            lovasz()
+            steps +=1
+            print 'Step ', steps,'. After checking the Lovasz condition, the basis is\n', basis
+            raw_input("")
+        print 'LLL Reduced Basis:\n', basis
     else: 
-        print 'ERROR: The input must be linearly independent.'
+        gram_schmidt(basis)
+        while k<= basis.shape[1] - 1:
+            reduction()
+            lovasz()
+        print 'LLL Reduced Basis:\n', basis
 
 if __name__ == "__main__":
     main()
